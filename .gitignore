@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.pi/npm/
+.git/pi/

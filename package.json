@@ -1,0 +1,43 @@
+{
+  "name": "small-coder",
+  "version": "0.1.0",
+  "description": "A pi package that replicates little-coder's scaffold-model-fit extensions for small local language models.",
+  "homepage": "https://github.com/small-coder/small-coder",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/small-coder/small-coder.git"
+  },
+  "license": "Apache-2.0",
+  "author": "small-coder contributors",
+  "type": "module",
+  "bin": {
+    "small-coder": "./bin/small-coder.mjs"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "bin/",
+    "AGENTS.md",
+    ".pi/settings.json",
+    "extensions/",
+    "skills/"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.75.3",
+    "@sinclair/typebox": "^0.34.49"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "pi": {
+    "extensions": ["./extensions"],
+    "skills": ["./skills"],
+    "prompts": []
+  }
+}
