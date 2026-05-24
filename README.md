@@ -3,15 +3,9 @@
 **A coding agent tuned for small local language models, built on top of
 [pi](https://pi.dev).**
 
-The research story behind all this — why scaffold–model fit matters, how a 9.7 B
-Qwen beat frontier entries on Aider Polyglot, and what the load-bearing
-mechanisms actually do — is written up by little-coder's author:
-**[_Honey, I Shrunk the Coding Agent_](https://open.substack.com/pub/itayinbarr/p/honey-i-shrunk-the-coding-agent)**.
-
-small-coder extracts the **scaffolding** from
-[little-coder](https://github.com/itayinbarr/little-coder) and ships it as a
-proper pi package — no separate launcher binary, no Python substrate. Just
-extensions + skills + AGENTS.md that auto-discover when you install via npm.
+small-coder ships as a proper pi package — no separate launcher binary, no
+Python substrate. Just extensions + skills + AGENTS.md that auto-discover when
+you install via npm.
 
 ## What is this?
 
@@ -140,8 +134,7 @@ Every scaffolding override surfaces as one consistent line to the user:
 harness intervention: the model has thought long enough — forcing it to start implementing.
 ```
 
-This unified voice replaces little-coder's earlier scattered warnings and makes
-it clear when pi (not the model) is making a decision.
+This unified voice makes it clear when pi (not the model) is making a decision.
 
 ## Configuration
 
@@ -161,10 +154,10 @@ Environment variables for deployment customization:
 
 | Variable                       | Values                                     | Effect                                                   |
 | ------------------------------ | ------------------------------------------ | -------------------------------------------------------- |
-| `LITTLE_CODER_PERMISSION_MODE` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement mode                          |
-| `LITTLE_CODER_BASH_ALLOW`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with built-in list      |
-| `LITTLE_CODER_ALLOWED_TOOLS`   | comma-separated tool names                 | Tool gating — only these tools can be called             |
-| `LITTLE_CODER_MAX_TURNS`       | integer                                    | Maximum turns per agent run (overrides turn-cap default) |
+| `SMALL_CODER_PERMISSION_MODE`  | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement mode                          |
+| `SMALL_CODER_BASH_ALLOW`       | comma-separated prefixes                   | Extra bash allow-prefixes merged with built-in list      |
+| `SMALL_CODER_ALLOWED_TOOLS`    | comma-separated tool names                 | Tool gating — only these tools can be called             |
+| `SMALL_CODER_MAX_TURNS`        | integer                                    | Maximum turns per agent run (overrides turn-cap default) |
 
 ## Removing extensions
 
@@ -189,53 +182,11 @@ project-local settings:
 Or simply delete extension directories after install. The pi package model means
 extensions are just files on disk — remove what you don't need.
 
-## Comparison with little-coder
+## What it does
 
-| Feature                   | little-coder                                    | small-coder                                 |
-| ------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| Distribution              | Global npm binary wrapper                       | **pi package** (auto-discovers)             |
-| Substrate                 | Was Python, now pi extensions                   | pi package only                             |
-| Provider registration     | Bundled `llama-cpp-provider` from `models.json` | Native pi providers (20+)                   |
-| Browser/Evidence tools    | Playwright browser automation                   | Out of scope initially                      |
-| Benchmark harness         | Python RPC client + drivers                     | Out of scope                                |
-| ShellSession backend      | tmux-proxy + subprocess                         | Use built-in bash tool                      |
-| Skill/knowledge injection | Yes, with scoring                               | **Yes, ported from little-coder**           |
-| Output parser             | Yes                                             | **Yes — the JSON repair logic**             |
-| Quality monitor           | Yes                                             | **Yes — empty/hallucinated/loop detection** |
+small-coder is a focused extension stack that drops benchmark-specific
+infrastructure (browser automation, evidence capture, custom ShellSession)
+and focuses on what actually moves the needle for small-model coding:
+output repair, quality correction, write guards, thinking budgets,
+context management, and skill/knowledge injection.
 
-small-coder is a **subset + refinement** of little-coder's extension stack. It
-drops benchmark-specific infrastructure (browser, evidence, ShellSession, Python
-harness) and focuses on what actually moves the needle for small-model coding:
-output repair, quality correction, write guards, thinking budgets, context
-management, and skill/knowledge injection.
-
-## License
-
-Apache-2.0 (same as little-coder). See [LICENSE](LICENSE) for details.
-
-small-coder is inspired by and ports mechanisms from
-[little-coder](https://github.com/itayinbarr/little-coder) by Itay Inbar, which
-itself was a derivative of
-[ClawSpring](https://github.com/SafeRL-Lab/clawspring). The pi coding agent
-(`@earendil-works/pi-coding-agent`) is Apache-2.0 / MIT.
-
-## Attribution
-
-The research and architectural patterns in this package come from:
-
-- **[little-coder](https://github.com/itayinbarr/little-coder)** by Itay Inbar —
-  the extension implementations, scoring algorithms, and intervention patterns
-  are ported directly
-- **[Honey, I Shrunk the Coding Agent](https://open.substack.com/pub/itayinbarr/p/honey-i-shrunk-the-coding-agent)**
-  — the whitepaper explaining why scaffold-model fit matters
-
-Citation:
-
-```bibtex
-@misc{smallcoder2026,
-  title        = {small-coder: A pi Package for Small Model Coding Agents},
-  author       = {Contributors to small-coder},
-  year         = {2026},
-  howpublished = {\url{https://github.com/itayinbarr/little-coder}}
-}
-```
