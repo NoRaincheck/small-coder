@@ -125,9 +125,8 @@ small-coder ships as a **pi package** with a `pi` manifest in its
 }
 ```
 
-When you `npm install -g small-coder`, pi discovers the extensions from:
+When installed, pi discovers the extensions from:
 
-- Global: `~/.nvm/versions/node/vXX/node_modules/small-coder/.pi/extensions/`
 - Project-local: `<project>/node_modules/small-coder/.pi/extensions/`
 
 Each extension is a TypeScript module that exports a default factory function
