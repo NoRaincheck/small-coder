@@ -50,12 +50,20 @@ npm install -g small-coder
 That's it. No launcher script needed — pi auto-discovers the extensions from
 `.pi/extensions/` in your installed package.
 
-> **Alternative: project-local install**
+> **Alternative: project-local install (npm)**
 >
 > ```bash
 > cd ~/your-project
 > npm install small-coder
 > # Extensions live in node_modules/small-coder/.pi/extensions/ and are discovered by pi
+> ```
+
+> **Alternative: install from GitHub**
+>
+> ```bash
+> cd ~/your-project
+> pi install https://github.com/NoRaincheck/small-coder.git
+> # Extensions live in .pi/extensions/small-coder/ and are auto-discovered
 > ```
 
 ## Run
