@@ -5,6 +5,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const DEFAULT_ALLOW_LIST = new Set([
   // Navigation & inspection
+  "cd",
   "ls",
   "cat",
   "head",
