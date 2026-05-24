@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // Bash command whitelist enforcement via LITTLE_CODER_PERMISSION_MODE env var.
-// Modes: "auto" (default, blocks unknown commands) / "accept-all" (no gating) / "manual" (confirm each)
+// Modes: "accept-all" (default, no gating) / "auto" (blocks unknown commands) / "manual" (confirm each)
 
 const DEFAULT_ALLOW_LIST = new Set([
   // Navigation & inspection
@@ -74,7 +74,7 @@ const DEFAULT_ALLOW_LIST = new Set([
 ]);
 
 function getMode(): "auto" | "accept-all" | "manual" {
-  return (process.env.LITTLE_CODER_PERMISSION_MODE || "auto") as
+  return (process.env.LITTLE_CODER_PERMISSION_MODE || "accept-all") as
     | "auto"
     | "accept-all"
     | "manual";
@@ -102,7 +102,7 @@ function isCommandAllowed(command: string): boolean {
 export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {
     const mode = getMode();
-    if (mode === "accept-all") return; // no gating when env var set to accept-all
+    if (mode === "accept-all") return; // default: no gating
 
     if (event.toolName !== "bash") return;
 

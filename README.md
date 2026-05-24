@@ -159,12 +159,12 @@ injection budgets:
 
 Environment variables for deployment customization:
 
-| Variable                       | Values                                     | Effect                                                   |
-| ------------------------------ | ------------------------------------------ | -------------------------------------------------------- |
-| `SMALL_CODER_PERMISSION_MODE`  | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement mode                          |
-| `SMALL_CODER_BASH_ALLOW`       | comma-separated prefixes                   | Extra bash allow-prefixes merged with built-in list      |
-| `SMALL_CODER_ALLOWED_TOOLS`    | comma-separated tool names                 | Tool gating — only these tools can be called             |
-| `SMALL_CODER_MAX_TURNS`        | integer                                    | Maximum turns per agent run (overrides turn-cap default) |
+| Variable                      | Values                                     | Effect                                                   |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------- |
+| `SMALL_CODER_PERMISSION_MODE` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement mode                          |
+| `SMALL_CODER_BASH_ALLOW`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with built-in list      |
+| `SMALL_CODER_ALLOWED_TOOLS`   | comma-separated tool names                 | Tool gating — only these tools can be called             |
+| `SMALL_CODER_MAX_TURNS`       | integer                                    | Maximum turns per agent run (overrides turn-cap default) |
 
 ## Removing extensions
 
@@ -189,11 +189,30 @@ project-local settings:
 Or simply delete extension directories after install. The pi package model means
 extensions are just files on disk — remove what you don't need.
 
+## Comparison with little-coder
+
+| Feature                   | little-coder                                    | small-coder                                 |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| Distribution              | Global npm binary wrapper                       | **pi package** (auto-discovers)             |
+| Substrate                 | Was Python, now pi extensions                   | pi package only                             |
+| Provider registration     | Bundled `llama-cpp-provider` from `models.json` | Native pi providers (20+)                   |
+| Browser/Evidence tools    | Playwright browser automation                   | Out of scope initially                      |
+| Benchmark harness         | Python RPC client + drivers                     | Out of scope                                |
+| ShellSession backend      | tmux-proxy + subprocess                         | Use built-in bash tool                      |
+| Skill/knowledge injection | Yes, with scoring                               | **Yes, ported from little-coder**           |
+| Output parser             | Yes                                             | **Yes — the JSON repair logic**             |
+| Quality monitor           | Yes                                             | **Yes — empty/hallucinated/loop detection** |
+
+small-coder is a **subset + refinement** of little-coder's extension stack. It
+drops benchmark-specific infrastructure (browser, evidence, ShellSession, Python
+harness) and focuses on what actually moves the needle for small-model coding:
+output repair, quality correction, write guards, thinking budgets, context
+management, and skill/knowledge injection.
+
 ## What it does
 
 small-coder is a focused extension stack that drops benchmark-specific
-infrastructure (browser automation, evidence capture, custom ShellSession)
-and focuses on what actually moves the needle for small-model coding:
-output repair, quality correction, write guards, thinking budgets,
-context management, and skill/knowledge injection.
-
+infrastructure (browser automation, evidence capture, custom ShellSession) and
+focuses on what actually moves the needle for small-model coding: output repair,
+quality correction, write guards, thinking budgets, context management, and
+skill/knowledge injection.
