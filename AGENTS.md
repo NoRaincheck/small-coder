@@ -66,6 +66,7 @@ When you see these blocks, trust them — they were selected for the current tur
 
 # Guidelines
 
+- Format all files using `deno fmt` after making changes.
 - Be concise. Lead with the answer.
 - Prefer editing existing files over creating new ones.
 - Always use absolute paths for file operations.
