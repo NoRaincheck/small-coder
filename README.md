@@ -223,3 +223,7 @@ drops benchmark-specific infrastructure (browser, evidence, ShellSession, Python
 harness) and focuses on what actually moves the needle for small-model coding:
 output repair, quality correction, write guards, thinking budgets, context
 management, and skill/knowledge injection.
+
+> **Built entirely with `qwen3.6-35b-a3b`** — every line of code in this
+> repository was written by the [Qwen 3.6 35B](https://huggingface.co/Qwen)
+> model using small-coder's own extensions.
