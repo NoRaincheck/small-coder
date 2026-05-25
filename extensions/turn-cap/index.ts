@@ -1,15 +1,17 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { getNumber } from "../_shared/config.ts";
 
 // Max turns per agent run; aborts via ctx.abort() when exceeded.
-// Default: 50 turns (configurable via LITTLE_CODER_MAX_TURNS env var).
+// Config: ~/.pi/agent/small-coder.json → { maxTurns }
+// negative or zero means unlimited.
 
 const DEFAULT_CAP = 50;
 
-function getTurnCap(): number {
-  const raw = process.env.LITTLE_CODER_MAX_TURNS;
-  if (!raw) return DEFAULT_CAP;
-  const n = parseInt(raw, 10);
-  return isNaN(n) || n <= 0 ? DEFAULT_CAP : n;
+function getTurnCap(): number | null {
+  const raw = getNumber("maxTurns");
+  if (typeof raw === "number" && raw > 0) return raw;
+  // negative / zero → unlimited
+  return null;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -20,6 +22,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("turn_end", async (event, ctx) => {
+    if (cap === null) return; // unlimited
     const turnIndex = (event as any).turnIndex;
     if (typeof turnIndex === "number" && turnIndex >= cap) {
       ctx.ui.notify(

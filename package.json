@@ -20,6 +20,7 @@
     "bin/",
     "AGENTS.md",
     ".pi/settings.json",
+    ".pi/agent/small-coder.json",
     "extensions/",
     "skills/"
   ],

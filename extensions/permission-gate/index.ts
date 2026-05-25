@@ -1,7 +1,10 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-// Bash command whitelist enforcement via LITTLE_CODER_PERMISSION_MODE env var.
-// Modes: "accept-all" (default, no gating) / "auto" (blocks unknown commands) / "manual" (confirm each)
+// Bash command whitelist enforcement.
+// Config: ~/.pi/agent/small-coder.json → { permissionMode, bashAllow }
+
+
+import { getString } from "../_shared/config.ts";
 
 const DEFAULT_ALLOW_LIST = new Set([
   // Navigation & inspection
@@ -74,14 +77,13 @@ const DEFAULT_ALLOW_LIST = new Set([
 ]);
 
 function getMode(): "auto" | "accept-all" | "manual" {
-  return (process.env.LITTLE_CODER_PERMISSION_MODE || "accept-all") as
-    | "auto"
-    | "accept-all"
-    | "manual";
+  const raw = getString("permissionMode", "auto");
+  if (raw === "auto" || raw === "manual" || raw === "accept-all") return raw;
+  return "auto";
 }
 
-function getExtraAllowPrefixes(): string[] {
-  const raw = process.env.LITTLE_CODER_BASH_ALLOW;
+function getBashAllowPrefixes(): string[] {
+  const raw = getString("bashAllow", "");
   if (!raw) return [];
   return raw.split(",").map((p) => p.trim()).filter(Boolean);
 }
@@ -90,7 +92,7 @@ function getExtraAllowPrefixes(): string[] {
  * Check if a command is allowed by the whitelist.
  */
 function isCommandAllowed(command: string): boolean {
-  const prefixes = [...DEFAULT_ALLOW_LIST, ...getExtraAllowPrefixes()];
+  const prefixes = [...DEFAULT_ALLOW_LIST, ...getBashAllowPrefixes()];
 
   for (const prefix of prefixes) {
     if (command.startsWith(prefix)) return true;

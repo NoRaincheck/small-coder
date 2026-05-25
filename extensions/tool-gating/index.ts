@@ -1,11 +1,13 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { getString } from "../_shared/config.ts";
 
-// Blocks tools not in LITTLE_CODER_ALLOWED_TOOLS. Publishes the allowed list
+// Blocks tools not in allowedTools. Publishes the allowed list
 // on systemPromptOptions for skill-inject filtering.
+// Config: ~/.pi/agent/small-coder.json → { allowedTools }
 
 function getAllowedTools(): Set<string> | null {
-  const raw = process.env.LITTLE_CODER_ALLOWED_TOOLS;
-  if (!raw) return null; // no gating when env var is unset
+  const raw = getString("allowedTools");
+  if (!raw) return null; // no gating when unset
   return new Set(raw.split(",").map((t) => t.trim()).filter(Boolean));
 }
 
