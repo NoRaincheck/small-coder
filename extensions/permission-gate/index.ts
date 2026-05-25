@@ -3,7 +3,6 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 // Bash command whitelist enforcement.
 // Config: ~/.pi/agent/small-coder.json → { permissionMode, bashAllow }
 
-
 import { getString } from "../_shared/config.ts";
 
 const DEFAULT_ALLOW_LIST = new Set([

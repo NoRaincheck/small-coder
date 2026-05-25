@@ -145,8 +145,30 @@ This unified voice makes it clear when pi (not the model) is making a decision.
 
 ## Configuration
 
-Per-model profiles control thinking budgets, temperatures, and skill/knowledge
-injection budgets:
+### small-coder settings
+
+Per-deployment configuration lives in `~/.pi/agent/small-coder.json`. This file controls bash permission gating, tool restrictions, and turn limits:
+
+```json
+// ~/.pi/agent/small-coder.json
+{
+  "permissionMode": "auto",
+  "bashAllow": "du,free,top",
+  "allowedTools": "read,write,bash,glob,web_search",
+  "maxTurns": 50
+}
+```
+
+| Setting          | Values                                                | Effect                                                         |
+| ---------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| `permissionMode` | `auto` (default) / `accept-all` / `manual`            | Bash whitelist enforcement: auto-blocks, accept-all bypasses, manual prompts for each command |
+| `bashAllow`      | comma-separated prefixes                              | Extra bash allow-prefixes merged with the built-in list          |
+| `allowedTools`   | comma-separated tool names                            | Tool gating — only these tools can be called                     |
+| `maxTurns`       | integer                                                 | Maximum turns per agent run (0 or negative = unlimited)         |
+
+### pi settings
+
+Per-model profiles control thinking budgets, temperatures, and skill/knowledge injection budgets:
 
 ```json
 // .pi/settings.json (project-local) or ~/.pi/agent/settings.json (global)
@@ -156,15 +178,6 @@ injection budgets:
   "retry": { "enabled": true, "maxRetries": 2 }
 }
 ```
-
-Environment variables for deployment customization:
-
-| Variable                      | Values                                     | Effect                                                   |
-| ----------------------------- | ------------------------------------------ | -------------------------------------------------------- |
-| `SMALL_CODER_PERMISSION_MODE` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement mode                          |
-| `SMALL_CODER_BASH_ALLOW`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with built-in list      |
-| `SMALL_CODER_ALLOWED_TOOLS`   | comma-separated tool names                 | Tool gating — only these tools can be called             |
-| `SMALL_CODER_MAX_TURNS`       | integer                                    | Maximum turns per agent run (overrides turn-cap default) |
 
 ## Removing extensions
 
