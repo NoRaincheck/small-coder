@@ -147,7 +147,8 @@ This unified voice makes it clear when pi (not the model) is making a decision.
 
 ### small-coder settings
 
-Per-deployment configuration lives in `~/.pi/agent/small-coder.json`. This file controls bash permission gating, tool restrictions, and turn limits:
+Per-deployment configuration lives in `~/.pi/agent/small-coder.json`. This file
+controls bash permission gating, tool restrictions, and turn limits:
 
 ```json
 // ~/.pi/agent/small-coder.json
@@ -159,16 +160,17 @@ Per-deployment configuration lives in `~/.pi/agent/small-coder.json`. This file 
 }
 ```
 
-| Setting          | Values                                                | Effect                                                         |
-| ---------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| `permissionMode` | `auto` (default) / `accept-all` / `manual`            | Bash whitelist enforcement: auto-blocks, accept-all bypasses, manual prompts for each command |
-| `bashAllow`      | comma-separated prefixes                              | Extra bash allow-prefixes merged with the built-in list          |
-| `allowedTools`   | comma-separated tool names                            | Tool gating — only these tools can be called                     |
-| `maxTurns`       | integer                                                 | Maximum turns per agent run (0 or negative = unlimited)         |
+| Setting          | Values                                     | Effect                                                                                        |
+| ---------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `permissionMode` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement: auto-blocks, accept-all bypasses, manual prompts for each command |
+| `bashAllow`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with the built-in list                                       |
+| `allowedTools`   | comma-separated tool names                 | Tool gating — only these tools can be called                                                  |
+| `maxTurns`       | integer                                    | Maximum turns per agent run (0 or negative = unlimited)                                       |
 
 ### pi settings
 
-Per-model profiles control thinking budgets, temperatures, and skill/knowledge injection budgets:
+Per-model profiles control thinking budgets, temperatures, and skill/knowledge
+injection budgets:
 
 ```json
 // .pi/settings.json (project-local) or ~/.pi/agent/settings.json (global)
@@ -221,11 +223,3 @@ drops benchmark-specific infrastructure (browser, evidence, ShellSession, Python
 harness) and focuses on what actually moves the needle for small-model coding:
 output repair, quality correction, write guards, thinking budgets, context
 management, and skill/knowledge injection.
-
-## What it does
-
-small-coder is a focused extension stack that drops benchmark-specific
-infrastructure (browser automation, evidence capture, custom ShellSession) and
-focuses on what actually moves the needle for small-model coding: output repair,
-quality correction, write guards, thinking budgets, context management, and
-skill/knowledge injection.
