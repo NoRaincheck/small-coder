@@ -64,6 +64,16 @@ Your system prompt is assembled per turn by small-coder's extension stack:
 
 When you see these blocks, trust them — they were selected for the current turn.
 
+# Upstream (little-coder)
+
+This repo evolved from [little-coder](https://github.com/itayinbarr/little-coder). When incorporating upstream changes, start from reviewed commit `f5cf27b` to ensure everything is incorporated:
+
+```bash
+cd /path/to/little-coder-clone && git log --oneline f5cf27b..HEAD
+```
+
+Identify which commits represent meaningful improvements vs. maintenance/bug fixes.
+
 # Guidelines
 
 - Format all files using `deno fmt` after making changes.
