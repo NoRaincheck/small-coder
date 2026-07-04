@@ -29,16 +29,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "^0.75.3",
+    "@earendil-works/pi-coding-agent": "^0.80.3",
     "@sinclair/typebox": "^0.34.49"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.9"
   },
   "pi": {
-    "extensions": ["./extensions"],
-    "skills": ["./skills"],
+    "extensions": [
+      "./extensions"
+    ],
+    "skills": [
+      "./skills"
+    ],
     "prompts": []
   }
 }
