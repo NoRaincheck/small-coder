@@ -1,5 +1,5 @@
 ---
-name: Read
+name: read
 description: Reading files efficiently
 priority: 10
 tags: ["read", "file", "inspect"]

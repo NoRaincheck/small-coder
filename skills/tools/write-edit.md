@@ -8,13 +8,13 @@ error_recovery_tags: ["write_refused", "existing_file"]
 
 # Write vs Edit — Which to Use?
 
-## `Write` — Create new files only
+## `write` — Create new files only
 
 - Creates a file that **does not exist yet**
 - Fails (with guidance) if the file already exists
 - Path normalization: `/foo.md` → `<cwd>/foo.md`
 
-## `Edit` — Modify existing files (recommended for changes)
+## `edit` — Modify existing files (recommended for changes)
 
 - Requires exact `old_string` / `new_string` matching
 - **Read first**: Always use Read before Edit to get line numbers and precision

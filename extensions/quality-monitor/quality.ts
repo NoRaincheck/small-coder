@@ -59,7 +59,7 @@ export function buildCorrectionMessage(reason: string): string {
       "text or a tool call to make progress on the task.",
     empty_tool_name:
       "Your tool call had an empty name. Please specify a valid tool name. " +
-      "Available tools include: Read, Write, Edit, Bash, Glob, Grep.",
+      "Available tools include: read, write, edit, bash, glob, grep.",
     repeated_tool_call:
       "You just made the exact same tool call as your previous turn. " +
       "This suggests you may be stuck in a loop. Please try a different " +

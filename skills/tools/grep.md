@@ -1,5 +1,5 @@
 ---
-name: Grep
+name: grep
 description: Searching file contents efficiently
 priority: 9
 tags: ["grep", "search", "find"]

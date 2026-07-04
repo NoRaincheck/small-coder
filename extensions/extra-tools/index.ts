@@ -13,7 +13,7 @@ import { isAbsolute, join } from "node:path";
 export default function (pi: ExtensionAPI) {
   // --- Glob Tool ---
   pi.registerTool({
-    name: "Glob",
+    name: "glob",
     label: "Glob",
     description:
       "Find files matching a glob pattern. Supports *.ts, src/**/*.js, etc.",
@@ -60,7 +60,7 @@ export default function (pi: ExtensionAPI) {
 
   // --- WebFetch Tool ---
   pi.registerTool({
-    name: "WebFetch",
+    name: "webfetch",
     label: "Web Fetch",
     description: "Fetch content from a URL. Returns the response body as text.",
     parameters: Type.Object({
@@ -115,7 +115,7 @@ export default function (pi: ExtensionAPI) {
 
   // --- WebSearch Tool ---
   pi.registerTool({
-    name: "WebSearch",
+    name: "websearch",
     label: "Web Search",
     description:
       "Search the web using a search engine. Returns top results with snippets.",

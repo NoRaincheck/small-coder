@@ -1,5 +1,5 @@
 ---
-name: Bash
+name: bash
 description: Shell command best practices
 priority: 8
 tags: ["bash", "shell", "command"]

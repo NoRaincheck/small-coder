@@ -33,7 +33,7 @@ export default function (pi: ExtensionAPI) {
       return {
         block: true,
         reason:
-          `Write refuses on existing file "${inputPath}". Use Edit with exact old_string / new_string to modify it. Read the file first for line numbers and precision.`,
+          `Write refuses on existing file "${inputPath}". Use edit with exact old_string / new_string to modify it. Read the file first for line numbers and precision.`,
       };
     }
   });

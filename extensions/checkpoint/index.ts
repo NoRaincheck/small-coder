@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-// Backs up files before Write/Edit to ~/.small-coder/checkpoints/<session>/
+// Backs up files before write/edit to ~/.small-coder/checkpoints/<session>/
 
 const CHECKPOINT_DIR = join(
   process.env.HOME || "",
