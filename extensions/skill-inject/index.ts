@@ -18,7 +18,7 @@ interface SkillEntry {
 }
 
 const MAX_INJECTED_SKILLS = 3; // max skill cards to inject per turn (token budget guard)
-const SKILL_DIRS = ["tools", "knowledge"]; // directories under skills/
+const SKILL_DIRS = ["tools", "knowledge", "protocols"]; // directories under skills/
 
 // Cache loaded skills on first use
 let cachedSkills: SkillEntry[] | null = null;

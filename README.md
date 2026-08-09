@@ -23,11 +23,14 @@ lifecycle events:
 - **quality-monitor**: Catches empty responses, hallucinated tools, repeated
   action loops — sends correction messages with a 2-strike cap
 - **write-guard**: Write refuses on existing files (forces Edit), rewrites
-  root-bare `/foo.md` paths to `<cwd>/foo.md`
+  root-bare `/foo.md` paths to `<cwd>/foo.md` and dropped-slash `Users/…` paths
+  to `/Users/…`
 - **thinking-budget**: Caps thinking tokens per turn; forces off + queues
   "commit to implementation" nudge on breach
 - **read-guard**: Trims oversized read results to first 30 lines before they
   overflow the context window
+- **read-guard-edit**: Edit refuses until the file has been Read this session —
+  stops small models from guessing `oldText` against unseen file contents
 - **skill-inject**: Per-turn tool-skill cards selected by error recovery >
   recency > intent prediction (budget-guarded)
 - **knowledge-inject**: Algorithm cheat sheets scored against user prompt via
@@ -37,9 +40,19 @@ lifecycle events:
 - **tool-gating**: Blocks tools not in an allowed list (useful for benchmark
   runs)
 - **turn-cap**: Maximum turns per agent run; aborts when exceeded
+- **finalize-warn**: Tells the model to emit a final `Answer:` line a few turns
+  before the turn-cap abort
 - **checkpoint**: Backs up files before Write/Edit to a session-scoped
   checkpoint directory
 - **extra-tools**: Glob, WebFetch, WebSearch (pi ships grep/find but not these)
+- **prompt-history**: Up-arrow recall of recent prompts, persisted across
+  sessions
+- **evidence**: EvidenceAdd/Get/List — a per-session citable-snippet store (1 KB
+  cap) for cite-before-answer research tasks
+- **evidence-compact**: Preserves evidence across pi's auto-compaction with a
+  bridge reminder
+- **context-watchdog**: Proactively compacts mid-run before a long autonomous
+  run blows past a small context window
 
 ## Install
 
@@ -152,6 +165,14 @@ controls bash permission gating, tool restrictions, and turn limits:
 | `allowedTools`   | comma-separated tool names                 | Tool gating — only these tools can be called                                                  |
 | `maxTurns`       | integer                                    | Maximum turns per agent run (0 or negative = unlimited)                                       |
 
+### Environment variables
+
+| Variable                          | Default | Effect                                                                               |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `SMALL_CODER_SESSION_ID`          | —       | Evidence session bucket (falls back to `LITTLE_CODER_SESSION_ID`)                    |
+| `SMALL_CODER_COMPACT_AT_PERCENT`  | `80`    | context-watchdog compaction trigger (% of context window; `<=0` or `>=100` disables) |
+| `SMALL_CODER_NO_COMPACT_WATCHDOG` | —       | Set to `1` to hard-disable context-watchdog                                          |
+
 ### pi settings
 
 Per-model profiles control thinking budgets, temperatures, and skill/knowledge
@@ -198,7 +219,7 @@ extensions are just files on disk — remove what you don't need.
 | Distribution              | Global npm binary wrapper                       | **pi package** (auto-discovers)             |
 | Substrate                 | Was Python, now pi extensions                   | pi package only                             |
 | Provider registration     | Bundled `llama-cpp-provider` from `models.json` | Native pi providers (20+)                   |
-| Browser/Evidence tools    | Playwright browser automation                   | Out of scope initially                      |
+| Browser/Evidence tools    | Playwright browser automation                   | Evidence: yes; browser: out of scope        |
 | Benchmark harness         | Python RPC client + drivers                     | Out of scope                                |
 | ShellSession backend      | tmux-proxy + subprocess                         | Use built-in bash tool                      |
 | Skill/knowledge injection | Yes, with scoring                               | **Yes, ported from little-coder**           |
@@ -206,11 +227,8 @@ extensions are just files on disk — remove what you don't need.
 | Quality monitor           | Yes                                             | **Yes — empty/hallucinated/loop detection** |
 
 small-coder is a **subset + refinement** of little-coder's extension stack. It
-drops benchmark-specific infrastructure (browser, evidence, ShellSession, Python
-harness) and focuses on what actually moves the needle for small-model coding:
-output repair, quality correction, write guards, thinking budgets, context
-management, and skill/knowledge injection.
-
-> **Built entirely with `qwen3.6-35b-a3b`** — every line of code in this
-> repository was written by the [Qwen 3.6 35B](https://huggingface.co/Qwen)
-> model using small-coder's own extensions.
+drops benchmark-specific infrastructure (browser, ShellSession, Python harness)
+and focuses on what actually moves the needle for small-model coding: output
+repair, quality correction, write guards, read-before-edit, thinking budgets,
+proactive compaction, prompt history, evidence handling, context management, and
+skill/knowledge injection.

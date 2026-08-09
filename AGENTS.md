@@ -66,13 +66,17 @@ When you see these blocks, trust them — they were selected for the current tur
 
 # Upstream (little-coder)
 
-This repo evolved from [little-coder](https://github.com/itayinbarr/little-coder). When incorporating upstream changes, start from reviewed commit `f5cf27b` to ensure everything is incorporated:
+This repo evolved from
+[little-coder](https://github.com/itayinbarr/little-coder). When incorporating
+upstream changes, start from reviewed commit `0b72340` to ensure everything is
+incorporated:
 
 ```bash
-cd /path/to/little-coder-clone && git log --oneline f5cf27b..HEAD
+cd /path/to/little-coder-clone && git log --oneline 0b72340..HEAD
 ```
 
-Identify which commits represent meaningful improvements vs. maintenance/bug fixes.
+Identify which commits represent meaningful improvements vs. maintenance/bug
+fixes.
 
 # Guidelines
 
