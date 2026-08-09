@@ -63,14 +63,14 @@ try {
   console.error(
     `small-coder: cannot resolve pi cli entry under ${piPkgRoot}.\n` +
       `Underlying error: ${err?.message ?? err}\n` +
-      `Try reinstalling: npm install -g small-coder`,
+      `Try reinstalling: pi install https://github.com/NoRaincheck/small-coder.git`,
   );
   process.exit(1);
 }
 if (!existsSync(piEntry)) {
   console.error(
     `small-coder: cannot find pi at ${piEntry}.\n` +
-      `Try reinstalling: npm install -g small-coder`,
+      `Try reinstalling: pi install https://github.com/NoRaincheck/small-coder.git`,
   );
   process.exit(1);
 }

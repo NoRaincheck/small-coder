@@ -5,7 +5,7 @@
 
 small-coder ships as a proper pi package — no separate launcher binary, no
 Python substrate. Just extensions + skills + AGENTS.md that auto-discover when
-you install via npm.
+you install from git.
 
 ## What is this?
 
@@ -43,28 +43,13 @@ lifecycle events:
 
 ## Install
 
+small-coder is not published to npm — install it from git as a pi package:
+
 ```bash
-npm install -g small-coder
+cd ~/your-project
+pi install https://github.com/NoRaincheck/small-coder.git
+# Extensions live in .pi/git/github.com/NoRaincheck/small-coder/ and are auto-discovered
 ```
-
-That's it. No launcher script needed — pi auto-discovers the extensions from
-`.pi/extensions/` in your installed package.
-
-> **Alternative: project-local install (npm)**
->
-> ```bash
-> cd ~/your-project
-> npm install small-coder
-> # Extensions live in node_modules/small-coder/.pi/extensions/ and are discovered by pi
-> ```
-
-> **Alternative: install from GitHub**
->
-> ```bash
-> cd ~/your-project
-> pi install https://github.com/NoRaincheck/small-coder.git
-> # Extensions live in .pi/extensions/small-coder/ and are auto-discovered
-> ```
 
 ## Run
 
@@ -125,9 +110,9 @@ small-coder ships as a **pi package** with a `pi` manifest in its
 }
 ```
 
-When installed, pi discovers the extensions from:
+When installed, pi discovers the extensions from the package clone:
 
-- Project-local: `<project>/node_modules/small-coder/.pi/extensions/`
+- Project-local: `<project>/.pi/git/github.com/NoRaincheck/small-coder/`
 
 Each extension is a TypeScript module that exports a default factory function
 receiving `ExtensionAPI`. Extensions hook events like `turn_end`, `tool_call`,
@@ -189,15 +174,17 @@ project-local settings:
 ```json
 // .pi/settings.json
 {
-  "packages": ["npm:small-coder"],
-  "extensions": {
-    "npm:small-coder": [
-      "write-guard",
-      "quality-monitor",
-      "thinking-budget"
-      // disable others by omitting them
-    ]
-  }
+  "packages": [
+    {
+      "source": "https://github.com/NoRaincheck/small-coder.git",
+      "extensions": [
+        "write-guard",
+        "quality-monitor",
+        "thinking-budget"
+        // disable others by omitting them
+      ]
+    }
+  ]
 }
 ```
 
