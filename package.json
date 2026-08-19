@@ -1,5 +1,5 @@
 {
-  "name": "small-coder",
+  "name": "@noraincheck/small-coder",
   "version": "0.1.0",
   "description": "A pi package that replicates little-coder's scaffold-model-fit extensions for small local language models.",
   "homepage": "https://github.com/small-coder/small-coder",
@@ -10,6 +10,7 @@
   "license": "Apache-2.0",
   "author": "small-coder contributors",
   "type": "module",
+  "keywords": ["pi-package"],
   "bin": {
     "small-coder": "./bin/small-coder.mjs"
   },

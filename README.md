@@ -56,10 +56,12 @@ lifecycle events:
 
 ## Install
 
-small-coder is not published to npm — install it from git as a pi package:
+small-coder is published to npm — install it as a pi package:
 
 ```bash
 cd ~/your-project
+pi install npm:@noraincheck/small-coder
+# or install from git:
 pi install https://github.com/NoRaincheck/small-coder.git
 # Extensions live in .pi/git/github.com/NoRaincheck/small-coder/ and are auto-discovered
 ```
@@ -113,7 +115,7 @@ small-coder ships as a **pi package** with a `pi` manifest in its
 
 ```json
 {
-  "name": "small-coder",
+  "name": "@noraincheck/small-coder",
   "keywords": ["pi-package"],
   "pi": {
     "extensions": ["./extensions"],
