@@ -1,5 +1,7 @@
 # small-coder
 
+[![npm version](https://img.shields.io/npm/v/@noraincheck/small-coder.svg)](https://www.npmjs.com/package/@noraincheck/small-coder)
+
 **A coding agent tuned for small local language models, built on top of
 [pi](https://pi.dev).**
 
