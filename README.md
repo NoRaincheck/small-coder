@@ -232,3 +232,12 @@ and focuses on what actually moves the needle for small-model coding: output
 repair, quality correction, write guards, read-before-edit, thinking budgets,
 proactive compaction, prompt history, evidence handling, context management, and
 skill/knowledge injection.
+
+## Suggested options
+
+These pi settings work well with small models:
+
+| Setting | Value | Why |
+| ------- | ----- | --- |
+| `reasoningBudget` | `10000` (or your model's max output tokens) | Gives the model enough room to think without exhausting its context window |
+| `reasoningBudgetMessage` | `... okay, now I have enough information to answer.` | A concise nudge that signals the model to stop deliberating and start implementing |
