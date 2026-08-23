@@ -1,5 +1,7 @@
 # small-coder
 
+![small-coder](small-coder.png)
+
 [![npm version](https://img.shields.io/npm/v/@noraincheck/small-coder.svg)](https://www.npmjs.com/package/@noraincheck/small-coder)
 
 **A coding agent tuned for small local language models, built on top of
@@ -241,7 +243,7 @@ skill/knowledge injection.
 
 These pi settings work well with small models:
 
-| Setting | Value | Why |
-| ------- | ----- | --- |
-| `reasoningBudget` | `10000` (or your model's max output tokens) | Gives the model enough room to think without exhausting its context window |
+| Setting                  | Value                                                | Why                                                                                |
+| ------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `reasoningBudget`        | `10000` (or your model's max output tokens)          | Gives the model enough room to think without exhausting its context window         |
 | `reasoningBudgetMessage` | `... okay, now I have enough information to answer.` | A concise nudge that signals the model to stop deliberating and start implementing |
