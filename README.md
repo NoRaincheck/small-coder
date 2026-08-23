@@ -1,6 +1,8 @@
 # small-coder
 
-![small-coder](small-coder.png)
+<div align="center">
+  <img src="small-coder.png" alt="small-coder" width="200">
+</div>
 
 [![npm version](https://img.shields.io/npm/v/@noraincheck/small-coder.svg)](https://www.npmjs.com/package/@noraincheck/small-coder)
 
