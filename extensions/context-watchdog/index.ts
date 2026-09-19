@@ -120,6 +120,13 @@ export default function (pi: ExtensionAPI) {
   // Set true after a compaction completes; the next turn_start with a known
   // usage reading measures whether it actually opened headroom.
   let measurePending = false;
+  // True from the turn_start that fires a watchdog compaction until that
+  // compaction resolves (session_compact/onComplete/onError). Gates the resume
+  // so manual /compact or overflow recovery never get a spurious resume.
+  let watchdogInitiated = false;
+  // Deferred failure notice: onError only records the message (the captured
+  // ctx may already be stale); the next turn_start delivers it with a fresh ctx.
+  let pendingErrorMsg: string | null = null;
   // Usage percent captured at the moment we fire compaction, for the "freed N%"
   // notice once we can measure the result.
   let preCompactPercent: number | null = null;
@@ -127,6 +134,20 @@ export default function (pi: ExtensionAPI) {
   // stops firing until usage falls back below the threshold's hysteresis band,
   // so it can never spin the futile-compaction loop that wedges a session.
   let paused = false;
+
+  // Never let a stale runner (session replaced/reloaded between fire and
+  // callback) crash pi: notifies are best-effort and must never throw.
+  function safeNotify(
+    ctx: { ui?: { notify?: (msg: string, level?: string) => void } },
+    msg: string,
+    level: "info" | "warning",
+  ): void {
+    try {
+      ctx.ui?.notify?.(msg, level);
+    } catch {
+      // Stale ctx after session replacement/reload — drop the notice.
+    }
+  }
 
   pi.on("before_agent_start", async () => {
     // Each fresh user turn (including the auto-resume below) is a clean boundary;
@@ -136,7 +157,27 @@ export default function (pi: ExtensionAPI) {
     compacting = false;
   });
 
+  // Resume watchdog-initiated compactions from the session_compact event, which
+  // runs on a fresh runtime — unlike ctx.compact({ onComplete }), whose
+  // captured pi/ctx may already be stale after a session replacement/reload.
+  pi.on("session_compact", async () => {
+    if (!watchdogInitiated) return;
+    watchdogInitiated = false;
+    try {
+      pi.sendUserMessage(RESUME_MESSAGE);
+    } catch {
+      // Stale runtime after session replacement/reload — drop the resume.
+    }
+  });
+
   pi.on("turn_start", async (_event, ctx) => {
+    // (0) Deliver any deferred compaction-failure notice with this fresh ctx.
+    if (pendingErrorMsg) {
+      const msg = pendingErrorMsg;
+      pendingErrorMsg = null;
+      safeNotify(ctx, msg, "warning");
+    }
+
     const usage = ctx.getContextUsage?.();
 
     // (1) Measure the last compaction's effect the first time usage is known
@@ -152,7 +193,8 @@ export default function (pi: ExtensionAPI) {
             Math.max(0, Math.round(preCompactPercent - usage.percent))
           }%)`
           : "";
-        ctx.ui.notify(
+        safeNotify(
+          ctx,
           `context still at ${
             Math.round(usage.percent)
           }% after compaction${freed} — ` +
@@ -180,9 +222,11 @@ export default function (pi: ExtensionAPI) {
 
     if (!shouldCompactNow(usage, pct, compacting)) return;
     compacting = true;
+    watchdogInitiated = true;
     preCompactPercent = usage!.percent;
     const windowK = Math.round((usage!.contextWindow / 1000) * 10) / 10;
-    ctx.ui.notify(
+    safeNotify(
+      ctx,
       `context at ${
         Math.round(usage!.percent!)
       }% of ${windowK}k — compacting mid-run to stay under the window`,
@@ -190,25 +234,30 @@ export default function (pi: ExtensionAPI) {
     );
     // pi's public compact() is the *manual* path: it aborts the in-flight run,
     // summarizes, then reconnects the agent and leaves it idle (no auto-retry).
-    // On its own that strands an autonomous task at the prompt — so we resume it
-    // from onComplete once the agent is back and idle. sendUserMessage always
-    // triggers a turn, driving the run forward on the freshly-compacted context.
+    // On its own that strands an autonomous task at the prompt — so the
+    // session_compact handler above resumes it from a fresh runtime once the
+    // agent is back and idle. sendUserMessage always triggers a turn, driving
+    // the run forward on the freshly-compacted context.
+    //
+    // The callbacks below must never touch the captured ctx/pi: by the time an
+    // async compaction resolves, a session replacement or reload may have
+    // invalidated this runner, and any ctx.ui/pi access would throw the stale
+    // error that crashes pi. They only flip flags / stash messages; all
+    // side-effects happen on fresh-ctx events (session_compact, turn_start).
     ctx.compact({
       onComplete: () => {
         measurePending = true;
-        pi.sendUserMessage(RESUME_MESSAGE);
         compacting = false;
       },
       // Failed / cancelled compaction: pause rather than silently retrying.
       onError: (err?: { message?: string }) => {
         compacting = false;
+        watchdogInitiated = false;
         paused = true;
         const why = err?.message ? ` (${err.message})` : "";
-        ctx.ui.notify(
+        pendingErrorMsg =
           `automatic compaction could not proceed${why} — paused to avoid a loop. ` +
-            `Free space with /clear or use a larger-context model.`,
-          "warning",
-        );
+          `Free space with /clear or use a larger-context model.`;
       },
     });
   });

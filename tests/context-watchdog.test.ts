@@ -125,7 +125,11 @@ describe("shouldCompactNow", () => {
       expect(sendUserMessage).not.toHaveBeenCalled();
 
       // Simulate pi finishing the compaction (agent reconnected + idle).
+      // onComplete only re-arms measurement; the resume goes out via the
+      // session_compact event on a fresh runtime (stale-safe).
       capturedOpts.onComplete();
+      expect(sendUserMessage).not.toHaveBeenCalled();
+      await handlers.session_compact({}, { ui: { notify: vi.fn() } });
       expect(sendUserMessage).toHaveBeenCalledTimes(1);
       expect(sendUserMessage).toHaveBeenCalledWith(RESUME_MESSAGE);
     } finally {
@@ -268,7 +272,9 @@ describe("shouldCompactNow", () => {
       expect(compact).toHaveBeenCalledTimes(1);
 
       // pi throws "Nothing to compact" — the guard must pause, not retry.
+      // The failure notice is deferred to the next turn_start with a fresh ctx.
       compact.mock.calls[0][0].onError(new Error("Nothing to compact"));
+      await handlers.turn_start({}, ctx);
       expect(notify).toHaveBeenCalledWith(
         expect.stringContaining("Nothing to compact"),
         "warning",
@@ -277,6 +283,96 @@ describe("shouldCompactNow", () => {
       await handlers.turn_start({}, ctx);
       await handlers.turn_start({}, ctx);
       expect(compact).toHaveBeenCalledTimes(1); // still paused, never re-fired
+    } finally {
+      if (env === undefined) delete process.env.SMALL_CODER_COMPACT_AT_PERCENT;
+      else process.env.SMALL_CODER_COMPACT_AT_PERCENT = env;
+    }
+  });
+
+  it("never throws from compact callbacks when the captured ctx/pi went stale (session replaced)", async () => {
+    const env = process.env.SMALL_CODER_COMPACT_AT_PERCENT;
+    process.env.SMALL_CODER_COMPACT_AT_PERCENT = "80";
+    try {
+      const handlers: Record<string, Function> = {};
+      const sendUserMessage = vi.fn(() => {
+        throw new Error(
+          "This extension ctx is stale after session replacement or reload.",
+        );
+      });
+      const pi = {
+        on: (e: string, h: Function) => {
+          handlers[e] = h;
+        },
+        sendUserMessage,
+      };
+      setupWatchdog(pi as any);
+
+      const staleErr = new Error(
+        "This extension ctx is stale after session replacement or reload.",
+      );
+      const ctx = {
+        getContextUsage: () => ({
+          tokens: 59000,
+          contextWindow: 64000,
+          percent: 92,
+        }),
+        get ui(): never {
+          throw staleErr;
+        },
+        compact: vi.fn(),
+      };
+
+      // The pre-compact info notify must not throw on a stale ctx either.
+      await expect(handlers.turn_start({}, ctx)).resolves.toBeUndefined();
+      expect(ctx.compact).toHaveBeenCalledTimes(1);
+
+      const opts = (ctx.compact as any).mock.calls[0][0];
+      // Both async compact callbacks must swallow stale handles, never crash pi.
+      expect(() => opts.onComplete()).not.toThrow();
+      expect(() => opts.onError(new Error("Nothing to compact"))).not.toThrow();
+    } finally {
+      if (env === undefined) delete process.env.SMALL_CODER_COMPACT_AT_PERCENT;
+      else process.env.SMALL_CODER_COMPACT_AT_PERCENT = env;
+    }
+  });
+
+  it("resumes a watchdog-initiated compaction via session_compact with a fresh runtime", async () => {
+    const env = process.env.SMALL_CODER_COMPACT_AT_PERCENT;
+    process.env.SMALL_CODER_COMPACT_AT_PERCENT = "80";
+    try {
+      const handlers: Record<string, Function> = {};
+      const sendUserMessage = vi.fn();
+      const pi = {
+        on: (e: string, h: Function) => {
+          handlers[e] = h;
+        },
+        sendUserMessage,
+      };
+      setupWatchdog(pi as any);
+      expect(typeof handlers.session_compact).toBe("function");
+
+      const ctx = {
+        getContextUsage: () => ({
+          tokens: 52000,
+          contextWindow: 64000,
+          percent: 81,
+        }),
+        ui: { notify: vi.fn() },
+        compact: vi.fn(),
+      };
+      await handlers.turn_start({}, ctx);
+      expect(ctx.compact).toHaveBeenCalledTimes(1);
+
+      // No resume until the compaction actually finishes…
+      expect(sendUserMessage).not.toHaveBeenCalled();
+      // …then the session_compact event (fresh runtime) resumes the run.
+      await handlers.session_compact({}, { ui: { notify: vi.fn() } });
+      expect(sendUserMessage).toHaveBeenCalledTimes(1);
+      expect(sendUserMessage).toHaveBeenCalledWith(RESUME_MESSAGE);
+
+      // A second session_compact (e.g. manual /compact) must not re-resume.
+      await handlers.session_compact({}, { ui: { notify: vi.fn() } });
+      expect(sendUserMessage).toHaveBeenCalledTimes(1);
     } finally {
       if (env === undefined) delete process.env.SMALL_CODER_COMPACT_AT_PERCENT;
       else process.env.SMALL_CODER_COMPACT_AT_PERCENT = env;
