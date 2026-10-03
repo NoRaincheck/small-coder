@@ -1,9 +1,11 @@
 ---
 name: evidence-add-guidance
+title: EvidenceAdd Tool
 description: Saving citable evidence before answering research tasks
 priority: 10
 tags: ["evidence", "cite", "research", "EvidenceAdd", "EvidenceList"]
 error_recovery_tags: ["evidence_missing"]
+disable-model-invocation: true
 ---
 
 # EvidenceAdd Tool

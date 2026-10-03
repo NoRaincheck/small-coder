@@ -33,8 +33,9 @@ lifecycle events:
   to `/Users/…`
 - **thinking-budget**: Caps thinking tokens per turn; forces off + queues
   "commit to implementation" nudge on breach
-- **read-guard**: Trims oversized read results to first 30 lines before they
-  overflow the context window
+- **read-guard**: Trims an oversized read to head+tail (budget scaled to the
+  model's context window) before it overflows; never trims an explicit
+  `offset`/`limit` read or one pi already truncated
 - **read-guard-edit**: Edit refuses until the file has been Read this session —
   stops small models from guessing `oldText` against unseen file contents
 - **skill-inject**: Per-turn tool-skill cards selected by error recovery >
@@ -42,7 +43,8 @@ lifecycle events:
 - **knowledge-inject**: Algorithm cheat sheets scored against user prompt via
   keyword/bigram matching
 - **permission-gate**: Bash command whitelist (`ls`, `cat`,
-  `git log/status/diff`…) — configurable per deployment
+  `git log/status/diff`…) checked per shell segment, so `ls; rm -rf ~` and
+  `curl … | sh` are both blocked — configurable per deployment
 - **tool-gating**: Blocks tools not in an allowed list (useful for benchmark
   runs)
 - **turn-cap**: Maximum turns per agent run; aborts when exceeded
@@ -162,16 +164,22 @@ controls bash permission gating, tool restrictions, and turn limits:
   "permissionMode": "auto",
   "bashAllow": "du,free,top",
   "allowedTools": "read,write,bash,glob,web_search",
-  "maxTurns": 50
+  "maxTurns": 50,
+  "thinkingBudget": 4096
 }
 ```
 
-| Setting          | Values                                     | Effect                                                                                        |
-| ---------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `permissionMode` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement: auto-blocks, accept-all bypasses, manual prompts for each command |
-| `bashAllow`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with the built-in list                                       |
-| `allowedTools`   | comma-separated tool names                 | Tool gating — only these tools can be called                                                  |
-| `maxTurns`       | integer                                    | Maximum turns per agent run (0 or negative = unlimited)                                       |
+| Setting          | Values                                     | Effect                                                                                         |
+| ---------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `permissionMode` | `auto` (default) / `accept-all` / `manual` | Bash whitelist enforcement: auto-blocks, accept-all bypasses, manual prompts for each command  |
+| `bashAllow`      | comma-separated prefixes                   | Extra bash allow-prefixes merged with the built-in list                                        |
+| `allowedTools`   | comma-separated tool names                 | Tool gating — only these tools can be called                                                   |
+| `maxTurns`       | integer                                    | Maximum turns per agent run (0 or negative = unlimited)                                        |
+| `thinkingBudget` | integer                                    | Thinking-token ceiling per assistant turn; on breach thinking is forced off (0 = default 4096) |
+
+> `allowedTools` uses pi's lowercase tool names (`read`, `write`, `edit`,
+> `bash`, `grep`, `find`, `ls`, plus `glob`, `webfetch`, `websearch` from
+> extra-tools).
 
 ### Environment variables
 
@@ -180,11 +188,9 @@ controls bash permission gating, tool restrictions, and turn limits:
 | `SMALL_CODER_SESSION_ID`          | —       | Evidence session bucket (falls back to `LITTLE_CODER_SESSION_ID`)                    |
 | `SMALL_CODER_COMPACT_AT_PERCENT`  | `80`    | context-watchdog compaction trigger (% of context window; `<=0` or `>=100` disables) |
 | `SMALL_CODER_NO_COMPACT_WATCHDOG` | —       | Set to `1` to hard-disable context-watchdog                                          |
+| `SMALL_CODER_THINKING_BUDGET`     | `4096`  | Overrides the `thinkingBudget` setting                                               |
 
 ### pi settings
-
-Per-model profiles control thinking budgets, temperatures, and skill/knowledge
-injection budgets:
 
 ```json
 // .pi/settings.json (project-local) or ~/.pi/agent/settings.json (global)
@@ -243,9 +249,20 @@ skill/knowledge injection.
 
 ## Suggested options
 
-These pi settings work well with small models:
+pi 0.80.x has no `reasoningBudget` / `reasoningBudgetMessage` settings — those
+names do not appear in `Settings`. Thinking is controlled by
+`defaultThinkingLevel` (`off` / `minimal` / `low` / `medium` / `high` / `xhigh`)
+plus the optional per-level token caps in `thinkingBudgets`:
 
-| Setting                  | Value                                                | Why                                                                                |
-| ------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `reasoningBudget`        | `10000` (or your model's max output tokens)          | Gives the model enough room to think without exhausting its context window         |
-| `reasoningBudgetMessage` | `... okay, now I have enough information to answer.` | A concise nudge that signals the model to stop deliberating and start implementing |
+```json
+// .pi/settings.json or ~/.pi/agent/settings.json
+{
+  "defaultThinkingLevel": "low",
+  "thinkingBudgets": { "low": 4096, "medium": 8192 }
+}
+```
+
+small-coder's `thinkingBudget` (or `SMALL_CODER_THINKING_BUDGET`) is a separate,
+complementary guard: it watches reported reasoning tokens and forces thinking
+off plus a "commit to implementation" nudge when a turn overruns — which a
+static per-level cap cannot do.

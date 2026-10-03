@@ -1,44 +1,54 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 // Backs up files before write/edit to ~/.small-coder/checkpoints/<session>/
+//
+// The session id comes from pi's own session manager. PI_SESSION_ID is not set
+// by pi, so keying off it alone meant checkpointing silently no-op'd in normal
+// use; it is kept only as a fallback for out-of-band invocations.
 
-const CHECKPOINT_DIR = join(
+const CHECKPOINT_ROOT = join(
   process.env.HOME || "",
   ".small-coder",
   "checkpoints",
 );
 
-function getCheckpointSessionDir(): string | null {
-  // Try to extract session ID from the environment or generate one
-  const sessionId = process.env.PI_SESSION_ID;
-  if (!sessionId) return null;
-  return join(CHECKPOINT_DIR, `session_${sessionId}`);
+export function sessionIdFor(ctx: ExtensionContext): string | null {
+  return ctx.sessionManager?.getSessionId?.() ??
+    process.env.PI_SESSION_ID ??
+    null;
 }
 
-/**
- * Create a checkpoint backup of a file before it's modified.
- */
-function createCheckpoint(filePath: string): void {
-  const cleanPath = typeof filePath === "string"
-    ? filePath.replace(/^\/+/, "")
-    : "";
-  if (!cleanPath) return;
+function checkpointDir(ctx: ExtensionContext): string | null {
+  const sessionId = sessionIdFor(ctx);
+  if (!sessionId) return null;
+  return join(CHECKPOINT_ROOT, `session_${sessionId.replace(/[^\w.-]/g, "_")}`);
+}
 
-  if (!existsSync(cleanPath)) return;
+/** Create a backup of a file before it is modified. Best-effort. */
+export function createCheckpoint(
+  filePath: string,
+  ctx: ExtensionContext,
+): void {
+  if (typeof filePath !== "string" || !filePath) return;
+  if (!existsSync(filePath)) return;
+
+  const dir = checkpointDir(ctx);
+  if (!dir) return;
 
   try {
-    const dir = getCheckpointSessionDir();
-    if (!dir) return; // can't determine session — skip
-
     mkdirSync(dir, { recursive: true });
-
-    const safeName = cleanPath.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const checkpointPath = join(dir, `${safeName}.bak`);
-
-    mkdirSync(join(checkpointPath, ".."), { recursive: true });
-    writeFileSync(checkpointPath, readFileSync(cleanPath));
+    const safeName = filePath.replace(/^\/+/, "").replace(
+      /[^a-zA-Z0-9._-]/g,
+      "_",
+    );
+    const target = join(dir, safeName);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, readFileSync(filePath));
   } catch {
     // Best-effort — don't fail the operation if checkpointing fails
   }
@@ -46,31 +56,17 @@ function createCheckpoint(filePath: string): void {
 
 export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {
-    const evt = event as any;
-    if (event.toolName === "write" && typeof evt.input?.path === "string") {
-      createCheckpoint(evt.input.path);
-    } else if (
-      event.toolName === "edit" && typeof evt.input?.path === "string"
-    ) {
-      createCheckpoint(evt.input.path);
-    } else if (Array.isArray(evt.input?.paths)) {
-      // Batch edit — checkpoint first path only (best-effort)
-      for (const p of evt.input.paths) {
-        if (typeof p === "string") {
-          createCheckpoint(p);
-        }
-      }
+    const name = event.toolName;
+    if (name !== "write" && name !== "edit") return;
+    const input = (event as { input?: Record<string, unknown> }).input ?? {};
+    if (typeof input.path === "string") {
+      createCheckpoint(input.path, ctx);
+      return;
     }
-  });
-
-  pi.on("session_start", async () => {
-    // Ensure checkpoint directory exists for this session
-    const dir = getCheckpointSessionDir();
-    if (dir) {
-      try {
-        mkdirSync(dir, { recursive: true });
-      } catch {
-        // best-effort
+    // Batch edit — checkpoint every listed path.
+    if (Array.isArray(input.paths)) {
+      for (const p of input.paths) {
+        if (typeof p === "string") createCheckpoint(p, ctx);
       }
     }
   });

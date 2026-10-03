@@ -1,4 +1,7 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
 
 // Mid-run context watchdog.
 //
@@ -138,12 +141,12 @@ export default function (pi: ExtensionAPI) {
   // Never let a stale runner (session replaced/reloaded between fire and
   // callback) crash pi: notifies are best-effort and must never throw.
   function safeNotify(
-    ctx: { ui?: { notify?: (msg: string, level?: string) => void } },
+    ctx: Partial<Pick<ExtensionContext, "ui">>,
     msg: string,
     level: "info" | "warning",
   ): void {
     try {
-      ctx.ui?.notify?.(msg, level);
+      ctx.ui?.notify(msg, level);
     } catch {
       // Stale ctx after session replacement/reload — drop the notice.
     }

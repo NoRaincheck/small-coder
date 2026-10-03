@@ -1,9 +1,11 @@
 ---
 name: bash
+title: Bash Tool — Best Practices
 description: Shell command best practices
 priority: 8
 tags: ["bash", "shell", "command"]
 error_recovery_tags: ["permission_blocked", "timeout"]
+disable-model-invocation: true
 ---
 
 # Bash Tool — Best Practices

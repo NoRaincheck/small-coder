@@ -1,8 +1,10 @@
 ---
 name: cite-before-answer
+title: Cite-before-answer checklist
 description: Cite evidence before producing a final answer on research tasks
 priority: 8
 tags: ["cite", "evidence", "research", "citations"]
+disable-model-invocation: true
 ---
 
 # Cite-before-answer checklist

@@ -1,8 +1,10 @@
 ---
-name: Binary Search
+name: binary-search
+title: Binary Search
 description: Efficient search in sorted data — O(log n)
 priority: 8
 tags: ["binary search", "sorted", "search", "divide and conquer"]
+disable-model-invocation: true
 ---
 
 # Binary Search Template

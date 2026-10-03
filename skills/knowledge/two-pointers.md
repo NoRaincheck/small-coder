@@ -1,8 +1,10 @@
 ---
-name: Two Pointers & Sliding Window
+name: two-pointers
+title: Two Pointers & Sliding Window
 description: Process arrays in O(n) with two moving indices or a variable-sized window
 priority: 6
 tags: ["two pointers", "sliding window", "array", "sorted"]
+disable-model-invocation: true
 ---
 
 # Two Pointers & Sliding Window Templates

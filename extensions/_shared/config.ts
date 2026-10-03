@@ -9,6 +9,7 @@ export interface SmallCoderConfig {
   permissionMode?: "accept-all" | "auto" | "manual";
   bashAllow?: string; // comma-separated prefixes
   maxTurns?: number;
+  thinkingBudget?: number; // thinking-token ceiling per assistant turn
   allowedTools?: string; // comma-separated tool names
 }
 
@@ -54,7 +55,7 @@ export function getString(
  * Get a number value from the config.
  */
 export function getNumber(
-  key: "maxTurns",
+  key: "maxTurns" | "thinkingBudget",
   defaultValue?: number,
 ): number | undefined {
   const config = loadRawConfig();

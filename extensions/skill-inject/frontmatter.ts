@@ -2,7 +2,13 @@
 // Reads --- delimited blocks at the top of a file and parses key: value pairs.
 
 export interface SkillFrontmatter {
+  /**
+   * Skill identifier. pi validates this against /^[a-z0-9-]+$/ (no leading,
+   * trailing, or doubled hyphens) and warns otherwise, so keep it a slug.
+   */
   name?: string;
+  /** Human-readable heading for injected cards. Defaults to `name`. */
+  title?: string;
   description?: string;
   priority?: number; // higher = more important
   tags?: string[];
@@ -34,6 +40,9 @@ export function parseFrontmatter(content: string): SkillFrontmatter {
       case "name":
         fm.name = value.replace(/^["']|["']$/g, "");
         break;
+      case "title":
+        fm.title = value.replace(/^["']|["']$/g, "");
+        break;
       case "description":
         fm.description = value.replace(/^["']|["']$/g, "");
         break;
@@ -43,21 +52,28 @@ export function parseFrontmatter(content: string): SkillFrontmatter {
         if (!isNaN(n)) fm.priority = n;
         break;
       }
-      case "tags":
+      case "tags": {
+        fm.tags = parseList(value);
+        break;
+      }
       case "error_recovery_tags":
-      case "errorRecoveryTags": {
-        // Parse comma-separated or YAML list
-        const cleaned = value.replace(/^\[|\]$/g, "");
-        fm.tags = cleaned
-          .split(",")
-          .map((t) => t.trim().replace(/^["']|["']$/g, ""))
-          .filter(Boolean);
+      case "errorrecoverytags": {
+        fm.errorRecoveryTags = parseList(value);
         break;
       }
     }
   }
 
   return fm;
+}
+
+/** Parse a comma-separated value or a `[a, b]` YAML list. */
+function parseList(value: string): string[] {
+  return value
+    .replace(/^\[|\]$/g, "")
+    .split(",")
+    .map((t) => t.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
 }
 
 /**

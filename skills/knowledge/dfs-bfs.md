@@ -1,8 +1,10 @@
 ---
-name: DFS & BFS
+name: dfs-bfs
+title: DFS & BFS
 description: Graph/tree traversal — DFS for recursion/backtracking, BFS for shortest path
 priority: 7
 tags: ["dfs", "bfs", "graph", "tree", "traversal"]
+disable-model-invocation: true
 ---
 
 # DFS & BFS Templates

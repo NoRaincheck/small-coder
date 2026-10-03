@@ -1,9 +1,11 @@
 ---
 name: read
+title: Read Tool
 description: Reading files efficiently
 priority: 10
 tags: ["read", "file", "inspect"]
 error_recovery_tags: ["empty_response", "missing_context"]
+disable-model-invocation: true
 ---
 
 # Read Tool

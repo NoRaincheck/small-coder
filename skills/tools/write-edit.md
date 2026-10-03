@@ -1,9 +1,11 @@
 ---
-name: Write vs Edit Decision
+name: write-edit
+title: Write vs Edit Decision
 description: When to use Write vs Edit
 priority: 10
 tags: ["write", "edit", "file"]
 error_recovery_tags: ["write_refused", "existing_file"]
+disable-model-invocation: true
 ---
 
 # Write vs Edit — Which to Use?

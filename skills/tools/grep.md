@@ -1,9 +1,11 @@
 ---
 name: grep
+title: Grep Tool — Efficient Search
 description: Searching file contents efficiently
 priority: 9
 tags: ["grep", "search", "find"]
 error_recovery_tags: ["missing_context", "empty_response"]
+disable-model-invocation: true
 ---
 
 # Grep Tool — Efficient Search

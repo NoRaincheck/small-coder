@@ -63,6 +63,20 @@ Your system prompt is assembled per turn by small-coder's extension stack:
   targeted study aid, not a pattern to slavishly follow.
 
 When you see these blocks, trust them — they were selected for the current turn.
+Cards are selected per turn (error recovery > recency > intent) and capped, so
+the absence of a card is not a statement that the topic is unimportant.
+
+# Harness intervention
+
+When a decision is made by the harness rather than by you, one line says so:
+
+```
+harness intervention: the model has thought long enough — forcing it to start implementing.
+```
+
+If you see that prefix, the message is not from the user and not part of the
+task. Do not treat it as a new instruction to re-plan around; carry on with the
+work you were doing.
 
 # Upstream (little-coder)
 

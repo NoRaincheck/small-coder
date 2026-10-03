@@ -1,82 +1,64 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { getNumber } from "../_shared/config.ts";
 
-// Caps thinking tokens per turn. On breach: forces thinking off and queues a
-// "commit to implementation" nudge so the model stops deliberating and starts coding.
+// Caps thinking tokens per assistant turn. On breach: forces thinking off and
+// queues a "commit to implementation" nudge so the model stops deliberating
+// and starts coding.
+//
+// Token source: pi's `Usage.reasoning` (pi-ai/dist/types.ts) — the reasoning
+// breakdown, which providers report when they expose one. It is a subset of
+// `output`, so when a provider leaves it undefined we cannot tell reasoning
+// apart from ordinary output and correctly do nothing rather than guessing.
+//
+// Config: ~/.pi/agent/small-coder.json → { thinkingBudget }
+// Override: SMALL_CODER_THINKING_BUDGET
 
-const DEFAULT_BUDGET = 4096; // tokens — reasonable for small models
+const DEFAULT_BUDGET = 4096;
 
 function loadBudget(): number {
-  const home = process.env.HOME || "";
-  // Check project-local .pi/settings.json first, then global ~/.pi/agent/settings.json
-  const paths = [
-    join(process.cwd(), ".pi", "settings.json"),
-    join(home, ".pi", "agent", "settings.json"),
-  ];
-
-  for (const p of paths) {
-    if (!existsSync(p)) continue;
-    try {
-      const data = JSON.parse(readFileSync(p, "utf-8"));
-      // Per-model profile: top-level thinking_budget or in profiles object
-      if (typeof data?.thinking_budget === "number") {
-        return data.thinking_budget;
-      }
-      if (data?.profiles && typeof data.profiles === "object") {
-        for (const [_key, profile] of Object.entries(data.profiles)) {
-          const tb = (profile as Record<string, unknown>)?.thinking_budget as
-            | number
-            | undefined;
-          if (typeof tb === "number" && tb > 0) return tb;
-        }
-      }
-    } catch {
-      // skip unreadable config
-    }
+  const env = process.env.SMALL_CODER_THINKING_BUDGET;
+  if (env) {
+    const n = Number(env);
+    if (Number.isFinite(n) && n > 0) return n;
   }
+  const configured = getNumber("thinkingBudget");
+  return typeof configured === "number" && configured > 0
+    ? configured
+    : DEFAULT_BUDGET;
+}
 
-  return DEFAULT_BUDGET;
+/**
+ * Extract reasoning tokens from a pi usage record.
+ * Returns undefined when the provider reported no reasoning breakdown.
+ */
+export function reasoningTokensOf(usage: unknown): number | undefined {
+  if (!usage || typeof usage !== "object") return undefined;
+  const reasoning = (usage as { reasoning?: unknown }).reasoning;
+  return typeof reasoning === "number" && reasoning >= 0
+    ? reasoning
+    : undefined;
 }
 
 export default function (pi: ExtensionAPI) {
   const budget = loadBudget();
+  let intervened = false;
 
   pi.on("session_start", async () => {
-    // Reset state on new session — thinking tokens tracked per turn via message_end
+    intervened = false;
   });
 
   pi.on("message_end", async (event) => {
+    if (intervened) return;
     if (event.message.role !== "assistant") return;
 
-    const usage = event.message.usage;
-    if (!usage) return;
+    const thinkingTokens = reasoningTokensOf(event.message.usage);
+    // Provider gave us no reasoning breakdown — nothing to measure.
+    if (thinkingTokens === undefined || thinkingTokens <= budget) return;
 
-    // Extract thinking/reasoning tokens — varies by provider but commonly under cost.totalThoughts or reasoning_tokens
-    let thinkingTokens = 0;
-    const u = usage as unknown as Record<string, unknown>;
-    if (typeof u.cost === "object" && u.cost !== null) {
-      thinkingTokens = (u.cost as Record<string, number>)?.totalThoughts ?? 0;
-    }
-
-    // Fallback: check for reasoning_tokens or similar at top level
-    if (thinkingTokens === 0) {
-      thinkingTokens = (u.reasoningTokens as number) ??
-        (u.totalThoughts as number) ?? 0;
-    }
-
-    if (thinkingTokens <= budget) return;
-
-    // Breach detected — force thinking off and nudge to implement
-    try {
-      pi.setThinkingLevel?.("off");
-    } catch {
-      // setThinkingLevel may not be available in all pi versions — no-op
-    }
-
-    // Queue nudge for next turn: "commit to implementation"
+    intervened = true;
+    pi.setThinkingLevel("off");
     pi.sendUserMessage(
-      `You have thought long enough (${thinkingTokens} tokens > ${budget} budget). ` +
+      `You have thought long enough (${thinkingTokens} reasoning tokens > ${budget} budget). ` +
         `Stop deliberating and commit to an implementation. Start coding now.`,
       { deliverAs: "steer" },
     );

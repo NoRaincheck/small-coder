@@ -1,8 +1,10 @@
 ---
-name: Dynamic Programming
+name: dynamic-programming
+title: Dynamic Programming
 description: Solve overlapping subproblems by memoizing results — O(n²) or better
 priority: 7
 tags: ["dynamic programming", "dp", "memoization", "tabulation"]
+disable-model-invocation: true
 ---
 
 # Dynamic Programming Template

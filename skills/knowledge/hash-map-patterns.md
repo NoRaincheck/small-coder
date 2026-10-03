@@ -1,8 +1,10 @@
 ---
-name: Hash Map Patterns
+name: hash-map-patterns
+title: Hash Map Patterns
 description: Use maps/sets for O(1) lookups — the go-to pattern when you need fast membership or frequency counting
 priority: 6
 tags: ["hash map", "set", "frequency", "lookup", "dictionary"]
+disable-model-invocation: true
 ---
 
 # Hash Map & Set Patterns

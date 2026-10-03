@@ -1,9 +1,13 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getString } from "../_shared/config.ts";
 
-// Blocks tools not in allowedTools. Publishes the allowed list
-// on systemPromptOptions for skill-inject filtering.
+// Blocks tools not in allowedTools, and narrows the advertised tool set so the
+// model never sees a schema it isn't allowed to call.
 // Config: ~/.pi/agent/small-coder.json → { allowedTools }
+//
+// The allowed list reaches skill-inject through the system prompt's own
+// `selectedTools` (BuildSystemPromptOptions), which pi fills from the active
+// tool set — no side channel needed.
 
 function getAllowedTools(): Set<string> | null {
   const raw = getString("allowedTools");
@@ -15,35 +19,20 @@ export default function (pi: ExtensionAPI) {
   const allowed = getAllowedTools();
   if (!allowed) return; // nothing to gate
 
-  pi.on("before_agent_start", async (event, ctx) => {
-    // Publish the allowed list so skill-inject can filter tool cards
-    const opts = event.systemPromptOptions as unknown as
-      | Record<string, unknown>
-      | undefined;
-    if (opts) {
-      opts._allowedTools = Array.from(allowed);
-    }
+  pi.on("tool_call", async (event) => {
+    if (allowed.has(event.toolName)) return;
+    const available = Array.from(allowed).join(", ");
+    return {
+      block: true,
+      reason:
+        `Tool '${event.toolName}' is not in the allowed list. Allowed tools: ${available}`,
+    };
   });
 
-  pi.on("tool_call", async (event, ctx) => {
-    if (!allowed.has(event.toolName)) {
-      const available = Array.from(allowed).join(", ");
-      return {
-        block: true,
-        reason:
-          `Tool '${event.toolName}' is not in the allowed list. Allowed tools: ${available}`,
-      };
-    }
-  });
-
-  // Also filter active tools at session start for cleaner system prompt
+  // Narrow the advertised set so the model never plans around a blocked tool.
   pi.on("session_start", async () => {
-    try {
-      const allTools = pi.getAllTools?.() || [];
-      const enabled = allTools.filter((t: any) => allowed.has(t.name));
-      pi.setActiveTools?.(enabled.map((t: any) => t.name));
-    } catch {
-      // setActiveTools may not exist in older pi versions — no-op
-    }
+    const allTools = pi.getAllTools();
+    const enabled = allTools.filter((t) => allowed.has(t.name));
+    pi.setActiveTools(enabled.map((t) => t.name));
   });
 }
